@@ -1,10 +1,10 @@
-name: Build and Push Docker Image to AWS ECR
+name: Build and Push Docker Image to AWS ECR     # <-- fixed key
 
 # Run on every push to main and when manually triggered
 on:
   push:
     branches: [main]
-  workflow_dispatch:      # allows the green “Run workflow” button
+  workflow_dispatch:        # enables the green “Run workflow” button
 
 jobs:
   build-and-push:
@@ -15,38 +15,35 @@ jobs:
       AWS_REGION: ${{ secrets.AWS_REGION }}
 
     steps:
-    # 1️⃣ Checkout source
-    - name: Checkout code
-      uses: actions/checkout@v3
+      # 1️⃣ Checkout source
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    # 2️⃣ Configure AWS credentials (uses your three secrets)
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+      # 2️⃣ Configure AWS credentials (uses your three secrets)
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-    # 3️⃣ Log in to ECR (region is now passed explicitly)
-    - name: Log in to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-      with:
-        region: ${{ env.AWS_REGION }}
+      # 3️⃣ Log in to ECR
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          region: ${{ env.AWS_REGION }}
 
-    # 4️⃣ Build, tag, and push image
-    - name: Build, tag, and push image to ECR
-      env:
-        ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
-        ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-      run: |
-        IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:latest
+      # 4️⃣ Build, tag, and push image
+      - name: Build, tag, and push image to ECR
+        env:
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+        run: |
+          IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-        echo "🔨 Building Docker image…"
-        docker build -t $IMAGE_URI .
+          echo "🔨 Building Docker image…"
+          docker build -t $IMAGE_URI .
 
-        echo "📝 Tagging image…"
-        docker tag $IMAGE_URI $IMAGE_URI
-
-        echo "🚀 Pushing to Amazon ECR…"
-        docker push $IMAGE_URI
+          echo "🚀 Pushing image to Amazon ECR…"
+          docker push $IMAGE_URI
